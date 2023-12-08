@@ -89,6 +89,10 @@ async def shutdown():
 
 def signal_handler(signum, frame):
     logging.info("Shutdown initiated, please wait...")
+    # Ensure all tasks are completed before closing the loop
+    for task in asyncio.all_tasks(loop=asyncio.get_event_loop()):
+        if task is not asyncio.current_task():
+            task.cancel()
     asyncio.create_task(shutdown())
 
 # Register signal handlers
@@ -102,4 +106,5 @@ if __name__ == '__main__':
         loop.run_until_complete(bot.start(config['bot']['token']))
     finally:
         loop.run_until_complete(loop.shutdown_asyncgens())
+        loop.run_until_complete(loop.shutdown_default_executor())
         loop.close()
