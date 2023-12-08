@@ -29,25 +29,32 @@ ChadGPT is a Discord bot with a unique twist, combining cutting-edge AI with a p
     - `/get user <user_name> <preference>` (Self only, unless Admin)
 
 ## Data Structures
-- **thread_id**: A unique identifier for an OpenAI thread.
-- **channel_id**: A unique identifier for a Discord channel or DM.
-- **user_id**: A unique identifier for a Discord user.
-- **user_tier**: A user tier that determines the bot's behavior.
-- **user_preferences**: A set of user preferences that determine the bot's behavior.
-    - `opt_in`: A boolean indicating whether the user has opted in to use the bot.
-    - `model`: The name of the OpenAI model the user prefers. (overrides behavior model)
-    - `behavior`: The name of the behavior the user prefers.
-- **system_preferences**: A set of system preferences that determine the bot's behavior.
-- **channel_preferences**: A set of channel preferences that determine the bot's behavior.
-    - `opt_in`: A boolean indicating all channel users have opted in to use the bot.
-    - `model`: The name of the OpenAI model the user prefers. (overrides behavior model)
-    - `behavior`: The name of the behavior the user prefers.
+- **Thread-Channel Mapping**:
+  - `thread_id`: A unique identifier for an OpenAI thread.
+  - `channel_id`: A unique identifier for a Discord channel or DM.
+- **User Data**:
+  - `user_id`: A unique identifier for a Discord user.
+  - `user_tier`: Classification for the bot's behavior.
+  - `user_preferences`: Customizable settings for bot interaction.
+    - `opt_in`: Boolean indicating consent to interact with the bot.
+    - `model`: Preferred OpenAI model for responses.
+    - `behavior`: Preset behavior pattern for bot interaction.
+- **System Preferences**:
+  - Global settings influencing the bot's behavior.
+- **Channel Preferences**:
+  - Settings specific to each Discord channel.
+    - `opt_in`: Boolean for channel-wide bot interaction consent.
+    - `model`: Preferred OpenAI model for the channel.
+    - `behavior`: Behavior pattern for the channel.
 
 ## Additional Considerations
-- **Interactive Channel**: A special channel where all messages prompt the bot for a response. However, ChadGPT decides autonomously whether to engage, based on the content.
-- **Command System**: A command system that allows users to interact with the bot and the bot to interact with script functions. Users can execute bot commands with the standard `/` prefix, and the bot can execute script functions by returning the `!` prefix.
-- **Dynamic Configuration**: User preferences and overrides of *select* YAML file defaults and behaviors can be set via commands and stored in the database.
-- **User Privacy**: No user data is stored without consent, except for the bot channel. User should be able to have the bot "forget" them but that will be hard to implement for channels without impacting everyone.
-- **Bot Channel**: The bot channel is a special channel where the bot will always respond to messages. This is the only channel where the bot will respond without user consent. This is also the only channel where the bot will respond to commands without user consent.
+- **Interactive Channel**: A channel for free-form interaction with autonomous response decisions by ChadGPT.
+- **Command System**: Allows interaction with the bot and script function execution.
+- **Dynamic Configuration**: Configuration adjustments via commands, influencing behavior and preferences.
+- **User Privacy**: Commitment to data privacy and user consent, with options for data removal.
+- **Bot Channel**: A dedicated channel for unrestricted bot interaction.
+- **Privacy Settings**: Handling of user data, data storage duration, and security measures.
+- **Rate Limiting and Usage Quotas**: Management of message/command frequency by user tier.
+- **Fallback Mechanisms**: Default responses or model switching in case of AI response generation issues.
 
 ---
