@@ -46,7 +46,7 @@ db_conn = init_db()
 # Initialize OpenAI client
 openai.api_key = config['openai']['api_key']
 
-# Function to interact with OpenAI API
+# OpenAI API Completion
 async def ask_openai(prompt):
     try:
         response = openai.Completion.create(
@@ -59,20 +59,26 @@ async def ask_openai(prompt):
         logging.error(f"OpenAI API error: {e}")
         return None
 
-# Define your event handlers and commands using the configurations as needed
-# ...
+# Global variable to track OpenAI API availability
+openai_api_online = False
+
+@bot.event
+async def on_ready():
+    global openai_api_online
+    test_prompt = "Hello, World!"
+    try:
+        response = await ask_openai(test_prompt)
+        if response:
+            openai_api_online = True
+            logging.info("OpenAI API is up and responsive.")
+        else:
+            openai_api_online = False
+            logging.warning("OpenAI API is unreachable. Operating in limited mode.")
+    except Exception as e:
+        openai_api_online = False
+        logging.error(f"Error in testing OpenAI API: {e}")
+
+    logging.info(f'{bot.user} has connected to Discord and is ready.')
 
 if __name__ == '__main__':
     bot.run(config['bot']['token'])
-
-# Set up signal handlers?
-
-# Set up commands
-
-# Set up events
-
-# Set up tasks
-
-# Run bot
-
-# Clean up
