@@ -79,18 +79,27 @@ async def on_ready():
 
 # Graceful shutdown
 async def shutdown():
-    logging.info("Shutting down...")
+    logging.info("Completing shutdown...")
     await bot.close()
     if db_conn:
         db_conn.close()
+    # Close the aiohttp session for OpenAI client
+    await openai_client.aclose()
     logging.info("Bot has shut down successfully.")
 
-def signal_handler():
+def signal_handler(signum, frame):
+    logging.info("Shutdown initiated, please wait...")
     asyncio.create_task(shutdown())
 
 # Register signal handlers
 signal.signal(signal.SIGINT, signal_handler)
 signal.signal(signal.SIGTERM, signal_handler)
 
+# Main execution
 if __name__ == '__main__':
-    asyncio.run(bot.start(config['bot']['token']))
+    loop = asyncio.get_event_loop()
+    try:
+        loop.run_until_complete(bot.start(config['bot']['token']))
+    finally:
+        loop.run_until_complete(loop.shutdown_asyncgens())
+        loop.close()
