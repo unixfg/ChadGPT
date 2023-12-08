@@ -15,8 +15,7 @@ def load_config(config_path):
 config = load_config('config.yaml')
 
 # Configure logging
-logging.basicConfig(level=config['logging']['level'], 
-                    format=config['logging']['format'])
+logging.basicConfig(level=config['logging']['level'], format=config['logging']['format'])
 
 # Initialize the Discord bot
 intents = discord.Intents.default()
@@ -29,9 +28,19 @@ bot = commands.Bot(command_prefix=config['bot']['command_prefix'], intents=inten
 
 # Database setup
 def init_db():
-    # Database initialization code
-    # ...
+    conn = sqlite3.connect(config['database']['path'])
+    cursor = conn.cursor()
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS thread_mapping (
+            thread_id TEXT PRIMARY KEY,
+            channel_id TEXT
+        )
+    """)
+    # Add more table creation statements as needed
+    conn.commit()
+    return conn
 
+# Initialize the database
 db_conn = init_db()
 
 # Initialize OpenAI client
@@ -55,7 +64,6 @@ async def ask_openai(prompt):
 
 if __name__ == '__main__':
     bot.run(config['bot']['token'])
-
 
 # Set up signal handlers?
 
