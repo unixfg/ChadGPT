@@ -49,12 +49,11 @@ openai.api_key = config['openai']['api_key']
 # OpenAI API Completion
 async def ask_openai(prompt):
     try:
-        response = openai.Completion.create(
-            engine=config['openai']['default_model'],
-            prompt=prompt,
-            max_tokens=100  # Adjust as needed
+        response = openai.ChatCompletion.create(
+            model=config['openai']['default_model'],
+            messages=[{"role": "system", "content": prompt}]
         )
-        return response.choices[0].text.strip()
+        return response['choices'][0]['message']['content']
     except Exception as e:
         logging.error(f"OpenAI API error: {e}")
         return None
