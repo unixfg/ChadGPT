@@ -5,7 +5,7 @@ import yaml
 import signal
 import discord
 from discord.ext import commands
-import openai
+from openai import AsyncOpenAI
 
 # Load configuration from YAML file
 def load_config(config_path):
@@ -36,24 +36,22 @@ def init_db():
             channel_id TEXT
         )
     """)
-    # Add more table creation statements as needed
     conn.commit()
     return conn
 
-# Initialize the database
 db_conn = init_db()
 
-# Initialize OpenAI client
-openai.api_key = config['openai']['api_key']
+# Initialize OpenAI Async client
+openai_client = AsyncOpenAI(api_key=config['openai']['api_key'])
 
-# OpenAI API Completion
+# OpenAI API Chat Completion
 async def ask_openai(prompt):
     try:
-        response = openai.ChatCompletion.create(
-            model=config['openai']['default_model'],
-            messages=[{"role": "system", "content": prompt}]
+        chat_completion = await openai_client.chat.completions.create(
+            messages=[{"role": "user", "content": prompt}],
+            model=config['openai']['default_model']
         )
-        return response['choices'][0]['message']['content']
+        return chat_completion['choices'][0]['message']['content']
     except Exception as e:
         logging.error(f"OpenAI API error: {e}")
         return None
@@ -95,6 +93,4 @@ signal.signal(signal.SIGINT, signal_handler)
 signal.signal(signal.SIGTERM, signal_handler)
 
 if __name__ == '__main__':
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(bot.start(config['bot']['token']))
-    loop.close()
+    asyncio.run(bot.start(config['bot']['token']))
