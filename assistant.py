@@ -80,5 +80,22 @@ async def on_ready():
 
     logging.info(f'{bot.user} has connected to Discord and is ready.')
 
+# Graceful shutdown
+async def shutdown():
+    logging.info("Shutting down...")
+    await bot.close()
+    if db_conn:
+        db_conn.close()
+    logging.info("Bot has shut down successfully.")
+
+def signal_handler():
+    asyncio.create_task(shutdown())
+
+# Register signal handlers
+signal.signal(signal.SIGINT, signal_handler)
+signal.signal(signal.SIGTERM, signal_handler)
+
 if __name__ == '__main__':
-    bot.run(config['bot']['token'])
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(bot.start(config['bot']['token']))
+    loop.close()
