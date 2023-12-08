@@ -1,0 +1,4 @@
+asyncio
+pyyaml
+discord.py
+openai
