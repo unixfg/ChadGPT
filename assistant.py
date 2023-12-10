@@ -15,20 +15,20 @@ def load_config(config_path):
 config = load_config('config.yaml')
 
 # Configure logging
-logging.basicConfig(level=config['logging']['level'], format=config['logging']['format'])
+logging.basicConfig(level=config['logging'].get('level', 'INFO'), format=config['logging']['format'])
 
 # Initialize the Discord bot
 intents = discord.Intents.default()
-intents.guilds = config['bot']['intents']['guilds']
-intents.guild_messages = config['bot']['intents']['guild_messages']
-intents.dm_messages = config['bot']['intents']['dm_messages']
-intents.message_content = config['bot']['intents']['message_content']
+intents.guilds = config['bot']['intents'].get('guilds', True)
+intents.guild_messages = config['bot']['intents'].get('guild_messages', True)
+intents.dm_messages = config['bot']['intents'].get('dm_messages', True)
+intents.message_content = config['bot']['intents'].get('message_content', True)
 
-bot = commands.Bot(command_prefix=config['bot']['command_prefix'], intents=intents)
+bot = commands.Bot(command_prefix=config['bot'].get('command_prefix', "/"), intents=intents)
 
 # Database setup
 def init_db():
-    conn = sqlite3.connect(config['database']['path'])
+    conn = sqlite3.connect(config['database'].get('path', "db.sqlite3"))
     cursor = conn.cursor()
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS thread_mapping (
@@ -49,9 +49,10 @@ async def ask_openai(prompt):
     try:
         chat_completion = await openai_client.chat.completions.create(
             messages=[{"role": "user", "content": prompt}],
-            model=config['openai']['default_model']
+            model=config['openai'].get('default_model', "gpt-3.5-turbo"),
         )
-        return chat_completion['choices'][0]['message']['content']
+        # Accessing the response content correctly
+        return chat_completion.choices[0].message.content
     except Exception as e:
         logging.error(f"OpenAI API error: {e}")
         return None
@@ -81,18 +82,18 @@ async def on_ready():
 async def shutdown():
     logging.info("Completing shutdown...")
 
+    # Cancel all remaining tasks
+    tasks = [t for t in asyncio.all_tasks() if t is not asyncio.current_task()]
+    [task.cancel() for task in tasks]
+
+    await asyncio.gather(*tasks, return_exceptions=True)
+
     # Close the bot
     await bot.close()
 
     # Close the database connection
     if db_conn:
         db_conn.close()
-
-    # Cancel all remaining tasks
-    tasks = [t for t in asyncio.all_tasks() if t is not asyncio.current_task()]
-    for task in tasks:
-        task.cancel()
-    await asyncio.gather(*tasks, return_exceptions=True)
 
     logging.info("Bot has shut down successfully.")
 
@@ -109,6 +110,9 @@ if __name__ == '__main__':
     loop = asyncio.get_event_loop()
     try:
         loop.run_until_complete(bot.start(config['bot']['token']))
+    except asyncio.CancelledError:
+        # Suppress the CancelledError
+        pass
     finally:
         loop.run_until_complete(loop.shutdown_asyncgens())
         loop.close()
