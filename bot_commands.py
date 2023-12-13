@@ -1,5 +1,7 @@
 from discord.ext import commands
 
+from bot_main import ask_openai
+
 async def setup_commands(bot):
     @bot.command(name='wiki')
     async def wiki_command(ctx, *, query: str):
@@ -12,6 +14,10 @@ async def setup_commands(bot):
         # Process the response to extract URL or provide an appropriate answer
         # For example, checking if response contains a valid URL or information
         if "wikipedia.org" in response:
-            await ctx.send(f"Found Wikipedia page: {response}")
+            logging.info(f"Found Wikipedia URL")
+            logging.debug(f"OpenAI API response: {response}")
+            await ctx.send(f"{response}")
         else:
-            await ctx.send(f"I couldn't find a specific Wikipedia page, but here's some information: {response}")
+            logging.info(f"Did not find Wikipedia URL")
+            logging.debug(f"OpenAI API response: {response}")
+            await ctx.send(f"{response}")
