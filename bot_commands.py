@@ -1,23 +1,44 @@
-from discord.ext import commands
+import requests
+import yaml
 
-from bot_main import ask_openai
+# Load configuration from YAML file
+def load_config(config_path):
+    with open(config_path, 'r') as file:
+        return yaml.safe_load(file)
 
-async def setup_commands(bot):
-    @bot.command(name='wiki')
-    async def wiki_command(ctx, *, query: str):
-        """
-        Query AI for Wikipedia article URL.
-        """
-        prompt = f"Find a Wikipedia URL for: {query}"
-        response = await ask_openai(prompt)
+def register_command(config_path='config.yaml'):
+    config = load_config(config_path)
 
-        # Process the response to extract URL or provide an appropriate answer
-        # For example, checking if response contains a valid URL or information
-        if "wikipedia.org" in response:
-            logging.info(f"Found Wikipedia URL")
-            logging.debug(f"OpenAI API response: {response}")
-            await ctx.send(f"{response}")
-        else:
-            logging.info(f"Did not find Wikipedia URL")
-            logging.debug(f"OpenAI API response: {response}")
-            await ctx.send(f"{response}")
+    TOKEN = config['bot']['token']
+    CLIENT_ID = config['bot']['client_id']
+    GUILD_ID = config['bot']['guild_id']  # Optional: for registering to a specific guild
+
+    url = f"https://discord.com/api/v8/applications/{CLIENT_ID}/guilds/{GUILD_ID}/commands"  # Guild-specific
+    headers = {"Authorization": f"Bot {TOKEN}"}
+
+    # Check if the command already exists
+    response = requests.get(url, headers=headers)
+    if any(cmd['name'] == 'wiki' for cmd in response.json()):
+        print("Command 'wiki' already exists")
+    else:
+        # Define your command
+        json = {
+            "name": "wiki",
+            "description": "Query information from Wikipedia",
+            "options": [
+                {
+                    "name": "query",
+                    "description": "The query to search for",
+                    "type": 3,  # Type 3 is 'string'
+                    "required": True,
+                }
+            ]
+        }
+
+        response = requests.post(url, headers=headers, json=json)
+        print("Status Code", response.status_code)
+        print("JSON Response", response.json())
+
+# This makes the script run the function only if it's executed directly, not when imported
+if __name__ == '__main__':
+    register_command()
