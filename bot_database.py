@@ -1,15 +1,18 @@
 import sqlite3
+import logging
+from bot_config import load_config
 
-def init_db():
-    # Load config
-    from bot_config import load_config
-    config=load_config()
+def init_db(db_path):
+    """
+    Initialize the SQLite database.
 
-    # Set up logging
-    import logging
-    logging.basicConfig(level=config['logging'].get('level', 'INFO'),format=config['logging']['format'])
+    Args:
+    db_path (str): Path to the SQLite database file.
 
-    conn = sqlite3.connect(config['database'].get('path', "db.sqlite3"))
+    Returns:
+    sqlite3.Connection: The connection to the SQLite database.
+    """
+    conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS thread_mapping (
@@ -20,16 +23,19 @@ def init_db():
     conn.commit()
     return conn
 
-# If you want to validate or test loading the config when this file is run directly
 if __name__ == '__main__':
+    config = load_config()
+    logging.basicConfig(level=config['logging'].get('level', 'INFO'), format=config['logging']['format'])
+
+    db_path = config['database'].get('path', "db.sqlite3")
     try:
-        db_conn = init_db()
-        cursor = db_conn.cursor()
-        cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
-        tables = cursor.fetchall()
-        if tables:
-            print("Database is active.")
-        else:
-            print("Database is empty.")
+        with init_db(db_path) as db_conn:
+            cursor = db_conn.cursor()
+            cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
+            tables = cursor.fetchall()
+            if tables:
+                print("Database is active:", tables)
+            else:
+                print("Database is empty.")
     except Exception as error:
-        print("Failed to load configuration:", error)
+        logging.error("Failed to initialize the database:", error)
