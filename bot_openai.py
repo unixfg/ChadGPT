@@ -37,7 +37,7 @@ async def ask_openai(prompt, behavior_name):
 
 # For standalone execution
 async def main():
-    response = await ask_openai("What's your latest corpus update? Print this out as a ready message that confirms you're reachable.", "Competent")
+    response = await ask_openai("What's your latest corpus update? Print this out as a ready message that confirms you're reachable.", "Fast")
     print(response)
 
 # Execute only if run as a script
