@@ -1,5 +1,6 @@
 import yaml
 import os
+import logging
 
 def load_config(config_path='config.yaml'):
     """
@@ -7,27 +8,33 @@ def load_config(config_path='config.yaml'):
     it uses the script's location as the base.
 
     Args:
-    config_path (str): The path to the configuration file. It can be an absolute path or relative to the script's location.
+    config_path (str): The path to the configuration file.
 
     Returns:
-    dict: The configuration data.
+    dict: The configuration data or None if loading fails.
     """
     # Check if the provided path is absolute
     if not os.path.isabs(config_path):
-        # If not, prepend the script's directory to it
         script_dir = os.path.dirname(os.path.abspath(__file__))
         config_path = os.path.join(script_dir, config_path)
 
     try:
         with open(config_path, 'r') as file:
             return yaml.safe_load(file)
+    except FileNotFoundError:
+        logging.error(f"Configuration file not found: {config_path}")
+    except yaml.YAMLError as e:
+        logging.error(f"Error parsing YAML file: {e}")
     except Exception as e:
-        raise Exception(f"Error loading config file: {e}")
+        logging.error(f"Unexpected error loading config file: {e}")
+
+    return None  # or return a default configuration
 
 if __name__ == '__main__':
-    try:
-        # Example usage: you can pass a full path or just a filename
-        configuration = load_config('config.yaml')
+    logging.basicConfig(level=logging.INFO)
+    config_path = os.getenv('CONFIG_PATH', 'config.yaml')
+    configuration = load_config(config_path)
+    if configuration:
         print("Configuration loaded successfully:", configuration)
-    except Exception as error:
-        print("Failed to load configuration:", error)
+    else:
+        print("Failed to load configuration")
