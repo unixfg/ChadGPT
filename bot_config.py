@@ -2,6 +2,9 @@ import yaml
 import os
 import logging
 
+# Configure logging
+logging.basicConfig(level=config['logging'].get('level', 'INFO'),format=config['logging']['format'])
+
 def load_config(config_path='config.yaml'):
     """
     Load configuration from a YAML file. Uses the given path, or if a relative path is provided,
