@@ -2,9 +2,6 @@ import yaml
 import os
 import logging
 
-# Configure logging
-logging.basicConfig(level=config['logging'].get('level', 'INFO'),format=config['logging']['format'])
-
 def load_config(config_path='config.yaml'):
     """
     Load configuration from a YAML file. Uses the given path, or if a relative path is provided,
@@ -29,15 +26,25 @@ def load_config(config_path='config.yaml'):
     except yaml.YAMLError as e:
         logging.error(f"Error parsing YAML file: {e}")
     except Exception as e:
-        logging.error(f"Unexpected error loading config file: {e}")
+        raise Exception(f"Error loading config file: {e}")
 
     return None  # or return a default configuration
 
-if __name__ == '__main__':
+# Load the configuration and set up logging here
+config = load_config()
+
+if config:
+    logging.basicConfig(level=config['logging'].get('level', 'INFO'),
+                        format=config['logging']['format'])
+else:
+    # Set a default logging configuration if config loading fails
     logging.basicConfig(level=logging.INFO)
+
+if __name__ == '__main__':
     config_path = os.getenv('CONFIG_PATH', 'config.yaml')
     configuration = load_config(config_path)
     if configuration:
         print("Configuration loaded successfully:", configuration)
     else:
         print("Failed to load configuration")
+        
