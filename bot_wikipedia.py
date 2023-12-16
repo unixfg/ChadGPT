@@ -44,7 +44,10 @@ def setup_wiki_command(bot):
 async def main():
     query = "Hello, World!"
     response = await search_wikipedia(query)
-    print(response)
+    if response.startswith("https://en.wikipedia.org/wiki/"):
+        print("Wikipedia API is up and responsive.")
+    else:
+        print("Wikipedia API is not responding as expected.")
 
 if __name__ == '__main__':
     asyncio.run(main())

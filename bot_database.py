@@ -1,5 +1,5 @@
 import sqlite3
-import logging
+import asyncio
 from bot_config import load_config
 
 
@@ -13,8 +13,6 @@ def init_db(db_path):
     Returns:
     sqlite3.Connection: The connection to the SQLite database.
     """
-    config = load_config()
-    logging.basicConfig(level=config['logging'].get('level', 'INFO'), format=config['logging']['format'])
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
     cursor.execute("""
@@ -26,9 +24,9 @@ def init_db(db_path):
     conn.commit()
     return conn
 
-if __name__ == '__main__':
+# For testing
+async def main():
     config = load_config()
-    logging.basicConfig(level=config['logging'].get('level', 'INFO'), format=config['logging']['format'])
 
     db_path = config['database'].get('path', "db.sqlite3")
     try:
@@ -37,8 +35,11 @@ if __name__ == '__main__':
             cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
             tables = cursor.fetchall()
             if tables:
-                print("Database is active:", tables)
+                print("Database is active.")
             else:
                 print("Database is empty.")
     except Exception as error:
-        logging.error("Failed to initialize the database:", error)
+        print("Error in initializing database:", error)
+
+if __name__ == '__main__':
+    asyncio.run(main())

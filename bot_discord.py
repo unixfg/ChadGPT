@@ -1,4 +1,5 @@
 import aiohttp
+import asyncio
 import discord
 from discord import app_commands
 from discord.ext import commands
@@ -30,3 +31,15 @@ async def test_discord_connection(TOKEN, CLIENT_ID):
     async with aiohttp.ClientSession() as session:
         async with session.get(url, headers=headers) as response:
             return response.status
+        
+# For testing
+async def main():
+    # Test Discord connection
+    status = await test_discord_connection(config['bot']['token'], config['bot']['client_id'])
+    if status == 200:
+        print("Discord API is up and responsive.")
+    else:
+        print("Discord API is unreachable. Operating in limited mode.")
+
+if __name__ == '__main__':
+    asyncio.run(main())

@@ -28,13 +28,12 @@ async def ask_openai(prompt, behavior_name):
         logging.error(f"OpenAI API error with behavior '{behavior_name}': {e}")
         return None
 
+# For testing
 async def main():
-    # Example usage with command-line arguments
-    prompt = "Print a ready message"
+    prompt = "Print exactly this: 'OpenAI API is up and responsive.'"
     behavior_name = "Fast"
     response = await ask_openai(prompt, behavior_name)
     print(response)
 
 if __name__ == '__main__':
     asyncio.run(main())
-    
