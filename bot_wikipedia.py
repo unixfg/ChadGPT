@@ -1,16 +1,11 @@
 import asyncio
-import wikipedia
-import warnings
-from bs4 import GuessedAtParserWarning
+import aiohttp
 from bot_discord import app_commands, discord
 from bot_utils import trim_message
 
-# Suppress BeautifulSoup warnings from the Wikipedia library
-warnings.filterwarnings("ignore", category=GuessedAtParserWarning)
-
 async def search_wikipedia(query):
     """
-    Search Wikipedia for a query and return the URL of the best-matching article.
+    Search Wikipedia using the MediaWiki API and return the URL of the first search result.
 
     Args:
     query (str): The search query.
@@ -18,29 +13,23 @@ async def search_wikipedia(query):
     Returns:
     str: The URL of the Wikipedia article.
     """
-    try:
-        loop = asyncio.get_event_loop()
+    URL = "https://en.wikipedia.org/w/api.php"
+    PARAMS = {
+        "action": "opensearch",
+        "namespace": "0",
+        "search": query,
+        "limit": "1",
+        "format": "json"
+    }
 
-        # Search Wikipedia for the query and get the first result
-        search_results = await loop.run_in_executor(None, lambda: wikipedia.search(query))
-        if not search_results:
-            return f"No results found for '{query}'."
+    async with aiohttp.ClientSession() as session:
+        async with session.get(URL, params=PARAMS) as response:
+            data = await response.json()
 
-        # Get the page for the first search result
-        page_title = search_results[0]
-        page = await loop.run_in_executor(None, lambda: wikipedia.page(page_title))
-        return page.url
-
-    except wikipedia.exceptions.DisambiguationError as e:
-        options = e.options[:5]  # Limit to the first 5 options
-        options_str = ", ".join(options)
-        return f"DisambiguationError: The query '{query}' may refer to: {options_str}. Please be more specific."
-    except wikipedia.exceptions.PageError as e:
-        return f"PageError: No Wikipedia page found for '{query}'."
-    except wikipedia.exceptions.WikipediaException as e:
-        return f"WikipediaException: {e}"
-    except Exception as e:
-        return f"Exception: {e}"
+    if data[1]:
+        return data[3][0]  # URL of the first search result
+    else:
+        return f"No results found for '{query}'."
 
 def setup_wiki_command(bot):
     @bot.tree.command(name="wiki", description="Query information from Wikipedia")
