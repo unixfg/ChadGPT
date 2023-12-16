@@ -1,4 +1,4 @@
-asyncio
-pyyaml
+PyYAML
+aiohttp
 discord.py
 openai

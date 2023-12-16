@@ -31,13 +31,22 @@ def load_config(config_path='config.yaml'):
 
     return None  # or return a default configuration
 
+def set_logging(config):
+    """
+    Set the logging configuration.
+
+    Args:
+    config (dict): The configuration data.
+    """
+    logging.basicConfig(level=config['logging'].get('level', 'INFO'),
+                        format=config['logging']['format'])
+
 # For testing
 async def main():
     config = load_config()
 
     if config:
-        logging.basicConfig(level=config['logging'].get('level', 'INFO'),
-                            format=config['logging']['format'])
+        set_logging(config)
     else:
         # Set a default logging configuration if config loading fails
         logging.basicConfig(level=logging.INFO)
@@ -46,9 +55,9 @@ async def main():
         config_path = os.getenv('CONFIG_PATH', 'config.yaml')
         configuration = load_config(config_path)
         if configuration:
-            print("Configuration loaded successfully.")
+            logging.info("Configuration loaded.")
         else:
-            print("Failed to load configuration")
+            logging.warning("No configuration loaded, using defaults.")
 
 if __name__ == '__main__':
     asyncio.run(main())

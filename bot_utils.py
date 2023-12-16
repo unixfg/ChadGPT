@@ -1,7 +1,10 @@
 # bot_utils.py
-from bot_config import load_config
+import logging
+from bot_config import load_config, set_logging
 
 config = load_config()
+set_logging(config)  # Set up logging configuration
+logging.info("Configuration loaded and logging set up.")
 
 def trim_message(message, suffix="..."):
     """

@@ -2,17 +2,15 @@ import argparse
 import asyncio
 import signal
 import logging
-from bot_config import load_config
 from bot_discord import init_bot, test_discord_connection
 from bot_wikipedia import setup_wiki_command
 from bot_openai import ask_openai
 from bot_database import init_db
+from bot_config import load_config, set_logging
 
-# Load config
 config = load_config()
-
-# Set up logging
-logging.basicConfig(level=config['logging'].get('level', 'INFO'),format=config['logging']['format'])
+set_logging(config)  # Set up logging configuration
+logging.info("Configuration loaded and logging set up.")
 
 # Initialize the database connection
 db_path = config['database'].get('path', "db.sqlite3")
