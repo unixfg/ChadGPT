@@ -8,21 +8,29 @@ from bot_utils import trim_message
 # Suppress BeautifulSoup warnings from the Wikipedia library
 warnings.filterwarnings("ignore", category=GuessedAtParserWarning)
 
-def get_wikipedia_page(query):
-    """
-    Wrapper function to get a Wikipedia page.
-    This function will be used with asyncio's run_in_executor.
-    """
-    return wikipedia.page(query, redirect=True, auto_suggest=True)
-
 async def search_wikipedia(query):
     """
-    Search Wikipedia for a query and return the URL of the article.
+    Search Wikipedia for a query and return the URL of the best-matching article.
+
+    Args:
+    query (str): The search query.
+
+    Returns:
+    str: The URL of the Wikipedia article.
     """
     try:
         loop = asyncio.get_event_loop()
-        page = await loop.run_in_executor(None, get_wikipedia_page, query)
+
+        # Search Wikipedia for the query and get the first result
+        search_results = await loop.run_in_executor(None, lambda: wikipedia.search(query))
+        if not search_results:
+            return f"No results found for '{query}'."
+
+        # Get the page for the first search result
+        page_title = search_results[0]
+        page = await loop.run_in_executor(None, lambda: wikipedia.page(page_title))
         return page.url
+
     except wikipedia.exceptions.DisambiguationError as e:
         options = e.options[:5]  # Limit to the first 5 options
         options_str = ", ".join(options)
@@ -45,7 +53,7 @@ def setup_wiki_command(bot):
 
 # For testing
 async def main():
-    query = "NZT"
+    query = "Hello, World!"
     response = await search_wikipedia(query)
     print(response)
 
