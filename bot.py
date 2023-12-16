@@ -1,59 +1,28 @@
 import argparse
-import aiohttp
 import asyncio
 import signal
-from bot_utils import trim_message
-from bot_wikipedia import search_wikipedia
+import logging
+from bot_config import load_config
+from bot_discord import init_bot, test_discord_connection
+from bot_wikipedia import setup_wiki_command
 from bot_openai import ask_openai
 from bot_database import init_db
 
 # Load config
-from bot_config import load_config
 config = load_config()
 
 # Set up logging
-import logging
 logging.basicConfig(level=config['logging'].get('level', 'INFO'),format=config['logging']['format'])
 
 # Initialize the database connection
 db_path = config['database'].get('path', "db.sqlite3")
 db_conn = init_db(db_path)
 
-# Initialize the Discord bot with intents
-import discord
-from discord import app_commands
-from discord.ext import commands
-intents = discord.Intents.default()
+# Initialize the bot
+bot = asyncio.run(init_bot(config['bot']['token'], config['bot']['client_id']))
 
-# Setting intents based on the config
-intents.guilds = config['bot']['intents'].get('guilds', intents.guilds)
-intents.guild_messages = config['bot']['intents'].get('guild_messages', intents.guild_messages)
-intents.dm_messages = config['bot']['intents'].get('dm_messages', intents.dm_messages)
-intents.message_content = config['bot']['intents'].get('message_content', intents.message_content)
-
-# Create the bot instance
-bot = commands.Bot(command_prefix=config['bot'].get('command_prefix', "/"), intents=intents)
-
-# Test Discord connection
-async def test_discord_connection(TOKEN, CLIENT_ID):
-    """
-    Tests the connection to the Discord API asynchronously.
-    """
-    url = f"https://discord.com/api/v8/applications/{CLIENT_ID}"
-    headers = {"Authorization": f"Bot {TOKEN}"}
-
-    async with aiohttp.ClientSession() as session:
-        async with session.get(url, headers=headers) as response:
-            return response.status
-
-# Define a slash command
-@bot.tree.command(name="wiki", description="Query information from Wikipedia")
-@app_commands.describe(query="The query to search for")
-async def wiki(interaction: discord.Interaction, query: str):
-    await interaction.response.defer()
-    response = await search_wikipedia(query)
-    trimmed_response = trim_message(response)
-    await interaction.response.send_message(trimmed_response)
+# Initialize the wiki command
+setup_wiki_command(bot)
 
 @bot.event
 async def on_ready():
