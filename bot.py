@@ -1,22 +1,23 @@
-import sys
-import requests
 import argparse
 import aiohttp
 import asyncio
 import signal
+from bot_utils import trim_message
+from bot_wikipedia import search_wikipedia
 from bot_openai import ask_openai
+from bot_database import init_db
 
 # Load config
 from bot_config import load_config
-config=load_config()
+config = load_config()
 
 # Set up logging
 import logging
 logging.basicConfig(level=config['logging'].get('level', 'INFO'),format=config['logging']['format'])
 
 # Initialize the database connection
-from bot_database import init_db
-db_conn = init_db()
+db_path = config['database'].get('path', "db.sqlite3")
+db_conn = init_db(db_path)
 
 # Initialize the Discord bot with intents
 import discord
@@ -50,22 +51,9 @@ async def test_discord_connection(TOKEN, CLIENT_ID):
 @app_commands.describe(query="The query to search for")
 async def wiki(interaction: discord.Interaction, query: str):
     await interaction.response.defer()
-    """
-    Query AI for Wikipedia article URL.
-    """
-    prompt = f"{query}"
-    # Validate that openai_api_online is True
-    if not openai_api_online:
-        await interaction.response.send_message(config['messages']['offline'])
-        return
-    response = await ask_openai(prompt, "Wiki")
-
-    if interaction.response.is_done():
-        # Follow-up with an additional message
-        await interaction.followup.send(f"{response}")
-    else:
-        # Send initial response
-        await interaction.response.send_message(f"{response}")
+    response = await search_wikipedia(query)
+    trimmed_response = trim_message(response)
+    await interaction.response.send_message(trimmed_response)
 
 @bot.event
 async def on_ready():

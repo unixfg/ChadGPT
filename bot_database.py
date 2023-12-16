@@ -2,6 +2,7 @@ import sqlite3
 import logging
 from bot_config import load_config
 
+
 def init_db(db_path):
     """
     Initialize the SQLite database.
@@ -12,6 +13,8 @@ def init_db(db_path):
     Returns:
     sqlite3.Connection: The connection to the SQLite database.
     """
+    config = load_config()
+    logging.basicConfig(level=config['logging'].get('level', 'INFO'), format=config['logging']['format'])
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
     cursor.execute("""

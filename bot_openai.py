@@ -1,23 +1,16 @@
+import asyncio
+import logging
 from openai import AsyncOpenAI
+from bot_config import load_config
 
-# Function to find a behavior by name
+config = load_config()
+
 def get_behavior(behavior_name):
-    # Load config
-    from bot_config import load_config
-    config=load_config()
     behaviors = config['behaviors']
     return next((b for b in behaviors if b['name'] == behavior_name), None)
 
 # OpenAI API Chat Completion with Behavior
 async def ask_openai(prompt, behavior_name):
-    # Load config
-    from bot_config import load_config
-    config=load_config()
-
-    # Set up logging
-    import logging
-    logging.basicConfig(level=config['logging'].get('level', 'INFO'),format=config['logging']['format'])
-
     openai_client = AsyncOpenAI(api_key=config['openai']['api_key'])
 
     behavior = get_behavior(behavior_name)
@@ -32,15 +25,16 @@ async def ask_openai(prompt, behavior_name):
         )
         return chat_completion.choices[0].message.content
     except Exception as e:
-        logging.error(f"OpenAI API error: {e}")
+        logging.error(f"OpenAI API error with behavior '{behavior_name}': {e}")
         return None
 
-# For standalone execution
 async def main():
-    response = await ask_openai("What's your latest corpus update? Print this out as a ready message that confirms you're reachable.", "Fast")
+    # Example usage with command-line arguments
+    prompt = "Print a ready message"
+    behavior_name = "Fast"
+    response = await ask_openai(prompt, behavior_name)
     print(response)
 
-# Execute only if run as a script
 if __name__ == '__main__':
-    import asyncio
     asyncio.run(main())
+    
