@@ -2,6 +2,8 @@ import argparse
 import asyncio
 import signal
 import logging
+import discord
+from bot_utils import setup_license_command
 from bot_discord import init_bot, test_discord_connection
 from bot_wikipedia import setup_wiki_command
 from bot_openai import ask_openai
@@ -19,8 +21,10 @@ db_conn = init_db(db_path)
 # Initialize the bot
 bot = asyncio.run(init_bot(config['bot']['token'], config['bot']['client_id']))
 
-# Initialize the wiki command
+# Initialize the commands
+# Later this should be handled by a plugin system
 setup_wiki_command(bot)
+setup_license_command(bot)
 
 @bot.event
 async def on_ready():
@@ -40,6 +44,33 @@ async def on_ready():
         logging.error(f"Error in testing OpenAI API: {e}")
 
     logging.info(f'{bot.user} has connected to Discord and is ready.')
+
+@bot.event
+async def on_message(message):
+    # Check if the message is a DM
+    is_dm = message.channel.type == discord.ChannelType.private
+    if is_dm:
+        logging.info("Ignoring message in DM.")
+        return
+
+    # Check if the bot is mentioned in the message
+    if bot.user.mentioned_in(message) and message.author != bot.user:
+        logging.info(f"Bot mentioned by {message.author} with message: {message.content}")
+
+        # Extract the message text after the mention
+        mention = f'<@!{bot.user.id}>'
+        prompt = message.content.replace(mention, '').strip()
+
+        # Call ask_openai function
+        try:
+            openai_response = await ask_openai(prompt, "Fast")  # Replace "Fast" with your actual behavior name
+            if openai_response:
+                await message.channel.send(openai_response)
+            else:
+                await message.channel.send("I couldn't get a response from OpenAI.")
+        except Exception as e:
+            logging.error(f"Error in OpenAI response: {e}")
+            await message.channel.send("An error occurred while processing your request.")
 
 async def shutdown():
     logging.info("Completing shutdown...")

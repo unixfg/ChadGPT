@@ -1,7 +1,8 @@
 import asyncio
 import aiohttp
 import logging
-from bot_discord import app_commands, discord
+import discord
+from discord import app_commands
 from bot_utils import trim_message
 from bot_config import load_config, set_logging
 
